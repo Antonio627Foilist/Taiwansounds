@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loop Player</title>
+  <style>
+    :root { color-scheme: dark light; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: #0b0b0b; color: #fff;
+      overflow: hidden;
+    }
+
+    /* Fullscreen background video */
+    #player {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -2;
+      background: #000;
+    }
+
+    /* Dark tint overlay */
+    #tint {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: -1;
+    }
+
+    .wrap { text-align: center; padding: 24px; max-width: 720px; }
+    .hidden { display: none !important; }
+    .btn {
+      display: inline-block;
+      padding: 14px 24px;
+      font-size: 18px;
+      border-radius: 999px;
+      border: 0;
+      background: #ffffff;
+      color: #0b0b0b;
+      cursor: pointer;
+    }
+    .btn:active { transform: scale(0.99); }
+    .hint { opacity: 0.85; margin-top: 12px; font-size: 14px; }
+    .title { font-weight: 700; font-size: 22px; margin-bottom: 6px; }
+    .filename { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <video id="player" loop playsinline></video>
+  <div id="tint"></div>
+
+  <div class="wrap" id="gate">
+    <div class="title">Tap to Play & Loop</div>
+    <div class="filename" id="fileLabel"></div>
+    <p class="hint">One tap starts playback with sound.</p>
+    <button class="btn" id="startBtn">Play</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const file = params.get('file');
+
+    const gate = document.getElementById('gate');
+    const startBtn = document.getElementById('startBtn');
+    const fileLabel = document.getElementById('fileLabel');
+    const video = document.getElementById('player');
+
+    function setLabels(path) {
+      fileLabel.textContent = path || '(no file provided)';
+    }
+
+    if (!file) {
+      setLabels('');
+      startBtn.disabled = true;
+      fileLabel.textContent = 'Add ?file=tracks/01.mp4 to the URL';
+    } else {
+      video.src = file;
+      setLabels(file);
+    }
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        video.muted = false; // ensure sound
+        await video.play();
+        gate.classList.add('hidden'); // hide the Play overlay forever
+      } catch (e) {
+        alert('Playback failed. Check your file path or format.');
+      }
+    });
+
+    video.addEventListener('ended', () => {
+      video.currentTime = 0;
+      video.play().catch(()=>{});
+    });
+  </script>
+</body>
+</html>
